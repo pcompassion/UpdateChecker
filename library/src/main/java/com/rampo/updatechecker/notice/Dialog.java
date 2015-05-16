@@ -52,30 +52,47 @@ public class Dialog {
                 appName = (String) context.getPackageManager().getApplicationLabel(context.getPackageManager().getApplicationInfo(context.getPackageName(), 0));
             } catch (PackageManager.NameNotFoundException ignored) {
             }
-            alertDialogBuilder.setTitle(context.getResources().getString(R.string.newUpdateAvailable));
-            alertDialogBuilder.setMessage(context.getResources().getString(R.string.downloadFor, appName, storeName))
+
+			boolean isForceUpdate = this.isForceUpdate(versionDownloadable);
+
+			alertDialogBuilder.setTitle(context.getResources().getString(R.string.newUpdateAvailable));
+
+			if(isForceUpdate) {
+				alertDialogBuilder.setMessage(context.getResources().getString(R.string.downloadFor, appName, storeName))
+                    .setCancelable(false)
+                    .setPositiveButton(context.getString(R.string.dialogPositiveButton), new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								goToMarket(context);
+								dialog.cancel();
+							}
+						});
+			} else {
+				alertDialogBuilder.setMessage(context.getResources().getString(R.string.downloadFor, appName, storeName))
                     .setCancelable(true)
                     .setPositiveButton(context.getString(R.string.dialogPositiveButton), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            goToMarket(context);
-                            dialog.cancel();
-                        }
-                    })
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								goToMarket(context);
+								dialog.cancel();
+							}
+						})
                     .setNeutralButton(context.getString(R.string.dialogNeutralButton), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    })
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								dialog.cancel();
+							}
+						})
                     .setNegativeButton(context.getString(R.string.dialogNegativeButton), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            userHasTappedToNotShowNoticeAgain(context, versionDownloadable);
-                            dialog.cancel();
-                        }
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								userHasTappedToNotShowNoticeAgain(context, versionDownloadable);
+								dialog.cancel();
+							}
 
-                    });
+						});
+			}
+
             if (dialogIconResId != 0) {
                 alertDialogBuilder.setIcon(dialogIconResId);
             }
@@ -92,6 +109,13 @@ public class Dialog {
              but the activity is already closed, so generates a NullPointerException, IllegalStateException or BadTokenException.
 			 In this way, a force close is avoided.*/
     }
+
+	private boolean isForceUpdate(String versionDownloadable) {
+		if(versionDownloadable.endsWith("0")) {
+			return true;
+		}
+		return false;
+	}
 
     private static void userHasTappedToNotShowNoticeAgain(Context mContext, String mVersionDownloadable) {
         SharedPreferences prefs = mContext.getSharedPreferences(UpdateChecker.PREFS_FILENAME, 0);
